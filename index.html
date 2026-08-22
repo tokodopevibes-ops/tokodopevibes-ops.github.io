@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Kirim Pesanan</title>
+
+<!-- Ikon untuk layar utama (Android & iOS) -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232f6b4f'/%3E%3Ctext x='50' y='66' font-size='52' text-anchor='middle' fill='%23f6f3ec' font-family='sans-serif'%3E%E2%9C%89%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232f6b4f'/%3E%3Ctext x='50' y='66' font-size='52' text-anchor='middle' fill='%23f6f3ec' font-family='sans-serif'%3E%E2%9C%89%3C/text%3E%3C/svg%3E">
+
+<!-- Tampilan "app-like" saat dibuka dari ikon layar utama -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kirim Pesanan">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f6b4f">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #f6f3ec;
+  }
+  body {
+    padding: 16px 0 40px;
+  }
+</style>
+</head>
+<body>
+<div id="app-root"></div>
+<style>
+  #app-root {
+    --ink: #1c2620;
+    --paper: #f6f3ec;
+    --accent: #2f6b4f;
+    --accent-soft: #e4efe7;
+    --line: #d8d2c2;
+    --mono: 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+    border-radius: 14px;
+  }
+  #app-root * { box-sizing: border-box; }
+  .pk-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 4px;
+  }
+  .pk-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+  }
+  .pk-field { margin-bottom: 12px; }
+  .pk-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #56604f;
+    margin-bottom: 5px;
+  }
+  .pk-input, .pk-textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-family: var(--sans);
+    background: #fff;
+    color: var(--ink);
+  }
+  .pk-input:focus, .pk-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .pk-textarea { resize: vertical; min-height: 60px; }
+  .pk-btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .pk-btn:active { opacity: 0.85; }
+  .pk-btn.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .pk-output-wrap { margin-top: 18px; }
+  .pk-output {
+    white-space: pre-wrap;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    font-family: var(--sans);
+    color: var(--ink);
+  }
+  .pk-email-preview {
+    background: #f0ece0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    max-height: 460px;
+    overflow-y: auto;
+  }
+  .pk-copy-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .pk-copy-row .pk-btn { margin-top: 0; flex: 1; min-width: 140px; }
+  .pk-copy-row .pk-hi-btn { flex: 1; min-width: 120px; }
+  .pk-gmail-row { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .pk-gmail-btn { width: 100%; background: #b0413e !important; }
+  .pk-gmail-send-btn { flex: 1; min-width: 160px; background: #b0413e !important; margin-top: 0; }
+  .pk-gmail-draft-btn { flex: 1; min-width: 130px; }
+  .pk-gmail-btn:disabled, .pk-gmail-send-btn:disabled, .pk-gmail-draft-btn:disabled { opacity: 0.6; }
+  .pk-toast {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+  .pk-history {
+    margin-top: 28px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  .pk-history-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #56604f;
+    margin: 0 0 4px;
+  }
+  .pk-history-group { margin-bottom: 6px; }
+  .pk-history-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin: 14px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pk-history-group:first-of-type .pk-history-head { margin-top: 2px; }
+  .pk-history-date {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0;
+  }
+  .pk-copy-all-btn {
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    font-weight: 600;
+    white-space: nowrap;
+    flex: none !important;
+  }
+  .pk-history-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 9px 0;
+    border-bottom: 1px solid #eae5d8;
+    font-size: 13px;
+  }
+  .pk-history-item:last-child { border-bottom: none; }
+  .pk-hi-main { min-width: 0; }
+  .pk-hi-order { font-family: var(--mono); font-weight: 700; color: var(--ink); }
+  .pk-hi-sub { color: #7a8073; font-size: 11.5px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pk-hi-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .pk-hi-btn {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: 11.5px;
+    cursor: pointer;
+    color: var(--ink);
+    flex: 1;
+  }
+  .pk-empty { color: #8a8f80; font-size: 12.5px; font-style: italic; }
+  .pk-product-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+  .pk-product-row .pk-textarea { min-height: 44px; flex: 1; }
+  .pk-remove-btn {
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: #a33;
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .pk-add-btn {
+    background: transparent;
+    border: 1px dashed var(--accent);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+  .pk-product-block {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #fff;
+    position: relative;
+  }
+  .pk-product-block .pk-input, .pk-product-block .pk-textarea { margin-bottom: 6px; }
+  .pk-product-block .pk-input:last-child, .pk-product-block .pk-textarea:last-child { margin-bottom: 0; }
+  .pk-product-link { font-family: var(--mono); font-size: 13px; }
+  .pk-remove-x {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    border: none;
+    background: transparent;
+    color: #a33;
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+  }
+  .pk-tabs { display: flex; gap: 6px; margin-top: 18px; }
+  .pk-tab {
+    flex: 1;
+    padding: 9px;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #7a8073;
+  }
+  .pk-tab.active { color: var(--accent); border-color: var(--accent); border-bottom-color: #fff; }
+  .pk-input-row { display: flex; gap: 6px; align-items: flex-start; }
+  .pk-input-row .pk-input, .pk-input-row .pk-textarea { flex: 1; min-width: 0; }
+  .pk-paste-btn {
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 0 11px;
+    height: 40px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pk-paste-btn:active { opacity: 0.8; }
+  .pk-edit-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .pk-edit-cancel {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pk-subject-hint {
+    font-size: 11.5px;
+    color: #7a8073;
+    margin: 0 0 6px;
+  }
+  .pk-subject-hint b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+</style>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+function App() {
+  const STORE_NAME = 'Dope Vibes';
+  const LOGO_URL = 'https://sopii.netlify.app/logo.png';
+  const HISTORY_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
+  const GMAIL_CLIENT_ID = '753578580309-9evb51u7eik50le85shf06lbdd0p3nia.apps.googleusercontent.com';
+  const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.compose';
+
+  const [orderId, setOrderId] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [products, setProducts] = useState([{ name: '', link: '' }]);
+  const [email, setEmail] = useState('');
+  const [chat1Output, setChat1Output] = useState('');
+  const [emailOutput, setEmailOutput] = useState('');
+  const [emailHtml, setEmailHtml] = useState('');
+  const [gmailToken, setGmailToken] = useState(null);
+  const [gmailSending, setGmailSending] = useState(false);
+  const tokenClientRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('email');
+  const [toast, setToast] = useState('');
+  const [history, setHistory] = useState([]);
+  const toastTimer = useRef(null);
+
+  function updateProduct(idx, field, value) {
+    setProducts(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  }
+  function addProductRow() {
+    setProducts(prev => [...prev, { name: '', link: '' }]);
+  }
+  function removeProductRow(idx) {
+    setProducts(prev => prev.length === 1 ? prev : prev.filter((_, i) => i !== idx));
+  }
+
+  async function pasteFromClipboard() {
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text) return text.trim();
+      }
+    } catch (e) {}
+    showToast('Tidak bisa akses clipboard otomatis, tempel manual (tekan lama > Tempel)');
+    return null;
+  }
+
+  async function pasteInto(setter) {
+    const text = await pasteFromClipboard();
+    if (text !== null) setter(text);
+  }
+
+  async function pasteIntoProduct(idx, field) {
+    const text = await pasteFromClipboard();
+    if (text !== null) updateProduct(idx, field, text);
+  }
+
+  function resetForm() {
+    setOrderId('');
+    setEditingId(null);
+    setProducts([{ name: '', link: '' }]);
+    setEmail('');
+    setChat1Output('');
+    setEmailOutput('');
+    setEmailHtml('');
+  }
+
+  useEffect(() => { loadHistory(); }, []);
+
+  const GMAIL_TOKEN_KEY = 'gmail_token_cache';
+
+  function saveTokenCache(token, expiresInSec) {
+    try {
+      const expiresAt = Date.now() + (expiresInSec || 3500) * 1000;
+      localStorage.setItem(GMAIL_TOKEN_KEY, JSON.stringify({ token, expiresAt }));
+    } catch (e) {}
+  }
+
+  function loadTokenCache() {
+    try {
+      const raw = localStorage.getItem(GMAIL_TOKEN_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (data && data.token && data.expiresAt > Date.now() + 60000) return data;
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    const cached = loadTokenCache();
+    if (cached) setGmailToken(cached.token);
+  }, []);
+
+  useEffect(() => {
+    function initTokenClient() {
+      if (window.google && window.google.accounts && window.google.accounts.oauth2 && !tokenClientRef.current) {
+        tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+          client_id: GMAIL_CLIENT_ID,
+          scope: GMAIL_SCOPE,
+          callback: (resp) => {
+            if (resp && resp.access_token) {
+              setGmailToken(resp.access_token);
+              saveTokenCache(resp.access_token, resp.expires_in);
+              showToast('Berhasil login Gmail');
+            } else {
+              showToast('Login Gmail gagal atau dibatalkan');
+            }
+          },
+        });
+      }
+    }
+    if (window.google && window.google.accounts) {
+      initTokenClient();
+    } else {
+      const iv = setInterval(() => {
+        if (window.google && window.google.accounts) {
+          initTokenClient();
+          clearInterval(iv);
+        }
+      }, 300);
+      return () => clearInterval(iv);
+    }
+  }, []);
+
+  function loginGmail() {
+    if (tokenClientRef.current) {
+      tokenClientRef.current.requestAccessToken();
+    } else {
+      showToast('Google belum siap, coba lagi sebentar');
+    }
+  }
+
+  function base64UrlEncode(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function buildMimeMessage(to, subject, textBody, htmlBody) {
+    const boundary = 'pk_boundary_' + Date.now();
+    const headers = [
+      `To: ${to}`,
+      `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+      'MIME-Version: 1.0',
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    ].join('\r\n');
+    const textPart = `--${boundary}\r\nContent-Type: text/plain; charset="UTF-8"\r\n\r\n${textBody}\r\n`;
+    const htmlPart = `--${boundary}\r\nContent-Type: text/html; charset="UTF-8"\r\n\r\n${htmlBody}\r\n`;
+    const closing = `--${boundary}--`;
+    return `${headers}\r\n\r\n${textPart}${htmlPart}${closing}`;
+  }
+
+  async function gmailApiRequest(path, options) {
+    const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${gmailToken}`,
+        'Content-Type': 'application/json',
+        ...(options && options.headers ? options.headers : {}),
+      },
+    });
+    if (res.status === 401) {
+      setGmailToken(null);
+      try { localStorage.removeItem(GMAIL_TOKEN_KEY); } catch (e) {}
+      throw new Error('SESSION_EXPIRED');
+    }
+    if (!res.ok) {
+      const errData = await res.json().catch(() => null);
+      throw new Error((errData && errData.error && errData.error.message) || String(res.status));
+    }
+    return res.json();
+  }
+
+  async function sendToGmailDraft() {
+    if (!gmailToken) { loginGmail(); return; }
+    if (!emailHtml || !email.trim()) { showToast('Lengkapi data pesanan dulu'); return; }
+    setGmailSending(true);
+    try {
+      const subject = `Akses Folder Pesanan #${orderId.trim()}`;
+      const mime = buildMimeMessage(email.trim(), subject, emailOutput, emailHtml);
+      const raw = base64UrlEncode(mime);
+      await gmailApiRequest('drafts', { method: 'POST', body: JSON.stringify({ message: { raw } }) });
+      showToast('Draft berhasil dibuat di Gmail!');
+    } catch (e) {
+      if (e.message === 'SESSION_EXPIRED') showToast('Sesi Gmail habis, silakan login lagi');
+      else showToast('Gagal buat draft: ' + e.message);
+    } finally {
+      setGmailSending(false);
+    }
+  }
+
+  async function sendGmailNow() {
+    if (!gmailToken) { loginGmail(); return; }
+    if (!emailHtml || !email.trim()) { showToast('Lengkapi data pesanan dulu'); return; }
+    const confirmed = window.confirm(`Kirim email langsung ke ${email.trim()} sekarang? Email akan langsung terkirim, tidak bisa dibatalkan.`);
+    if (!confirmed) return;
+    setGmailSending(true);
+    try {
+      const subject = `Akses Folder Pesanan #${orderId.trim()}`;
+      const mime = buildMimeMessage(email.trim(), subject, emailOutput, emailHtml);
+      const raw = base64UrlEncode(mime);
+      const draft = await gmailApiRequest('drafts', { method: 'POST', body: JSON.stringify({ message: { raw } }) });
+      await gmailApiRequest('drafts/send', { method: 'POST', body: JSON.stringify({ id: draft.id }) });
+      showToast('Email berhasil terkirim ke pembeli!');
+    } catch (e) {
+      if (e.message === 'SESSION_EXPIRED') showToast('Sesi Gmail habis, silakan login lagi');
+      else showToast('Gagal kirim email: ' + e.message);
+    } finally {
+      setGmailSending(false);
+    }
+  }
+
+  function loadHistory() {
+    try {
+      const items = [];
+      const staleKeys = [];
+      const now = Date.now();
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf('order:') === 0) {
+          try {
+            const raw = localStorage.getItem(k);
+            if (raw) {
+              const rec = JSON.parse(raw);
+              if (now - (rec.ts || 0) > HISTORY_MAX_AGE_MS) {
+                staleKeys.push(k);
+              } else {
+                items.push(rec);
+              }
+            }
+          } catch (e) {}
+        }
+      }
+      staleKeys.forEach(k => localStorage.removeItem(k));
+      items.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      setHistory(items);
+    } catch (e) {
+      setHistory([]);
+    }
+  }
+
+  function buildChatMessage1(e) {
+    return `Gmail : [ ${e} ]
+
+Silakan cek inbox email Anda (jika belum masuk, coba cek folder Spam/Promosi juga), undangan akses folder sudah admin kirimkan melalui Gmail.
+
+Setelah klik tombol "Buka Folder" pada email tersebut, Anda bisa menemukan foldernya di aplikasi Google Drive pada bagian \u201cShared\u201d atau \u201cDibagikan kepada saya\u201d.
+
+Silakan dicek dahulu ya, apabila mengalami kendala bisa langsung chat kami, terima kasih banyak atas pesanannya \ud83d\ude4f\ud83d\ude4c`;
+  }
+
+  function buildEmail(o, productList, e) {
+    const items = productList.map((p, i) => `${i + 1}. ${p.name}\n   Link folder : ${p.link}`).join('\n\n');
+    const itemLabel = productList.length > 1 ? `${productList.length} item` : '1 item';
+    return `Yth. ${e},
+
+Terima kasih telah berbelanja di ${STORE_NAME}. Pesanan Anda telah kami proses dan folder unduhan sudah kami bagikan ke alamat email ini.
+
+No. Pesanan   : ${o}
+Total Produk  : ${itemLabel}
+
+${items}
+
+Folder dapat diakses langsung melalui link di atas, atau melalui menu "Dibagikan kepada saya" pada aplikasi/situs Google Drive Anda.
+
+Jika mengalami kendala akses, cukup balas email ini atau hubungi kami melalui chat Shopee \u2014 tim kami siap membantu.
+
+Salam hangat,
+${STORE_NAME}
+This is an automated email confirming the delivery of your digital order.`;
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function buildEmailHTML(o, productList, e) {
+    const itemLabel = productList.length > 1 ? `${productList.length} item` : '1 item';
+    const itemsHtml = productList.map((p, i) => `
+      <div style="margin:0 0 16px;padding:0 0 16px;border-bottom:1px solid #ece7d8;">
+        <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#1c1f18;font-family:Arial,Helvetica,sans-serif;">${i + 1}. ${escapeHtml(p.name)}</p>
+        <a href="${escapeHtml(p.link)}" style="display:inline-block;background-color:#c9a227;color:#1a1408;text-decoration:none;padding:11px 24px;border-radius:6px;font-size:13px;font-weight:700;letter-spacing:0.03em;font-family:Arial,Helvetica,sans-serif;">Buka Folder</a>
+      </div>`).join('');
+
+    return `<div style="max-width:520px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;">
+  <div style="background:#0b0b0b;padding:32px 20px;text-align:center;border-radius:12px 12px 0 0;">
+    <img src="${LOGO_URL}" width="300" alt="${STORE_NAME}" style="display:block;margin:0 auto;max-width:300px;height:auto;" />
+  </div>
+  <div style="background:#ffffff;border:1px solid #e7e2d3;border-top:none;padding:26px 22px;">
+    <p style="margin:0 0 16px;font-size:14px;color:#1c1f18;">Yth. <strong>${escapeHtml(e)}</strong>,</p>
+    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#3a4034;">Terima kasih telah berbelanja di <strong>${STORE_NAME}</strong>. Pesanan Anda telah kami proses dan folder unduhan sudah kami bagikan ke alamat email ini.</p>
+    <div style="background:#f6f3ec;border-radius:8px;padding:14px 16px;margin:0 0 22px;font-size:13px;color:#3a4034;">
+      <div><strong>No. Pesanan</strong> &nbsp;${escapeHtml(o)}</div>
+      <div style="margin-top:4px;"><strong>Total Produk</strong> &nbsp;${itemLabel}</div>
+    </div>
+    ${itemsHtml}
+    <p style="font-size:13px;color:#6b7264;line-height:1.6;margin:6px 0 0;">Folder dapat diakses langsung melalui tombol di atas, atau melalui menu &ldquo;Dibagikan kepada saya&rdquo; pada aplikasi/situs Google Drive Anda.</p>
+    <p style="font-size:13px;color:#6b7264;line-height:1.6;margin:12px 0 0;">Jika mengalami kendala akses, cukup balas email ini atau hubungi kami melalui chat Shopee &mdash; tim kami siap membantu.</p>
+    <p style="font-size:13px;color:#1c1f18;margin:22px 0 0;">Salam hangat,<br/><strong>${STORE_NAME}</strong></p>
+  </div>
+  <p style="text-align:center;font-size:11px;color:#9aa08e;margin:14px 0 0;">This is an automated email confirming the delivery of your digital order.</p>
+</div>`;
+  }
+
+  function showToast(msg) {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 1800);
+  }
+
+  function handleGenerate() {
+    const cleanProducts = products
+      .map(p => ({ name: p.name.trim(), link: p.link.trim() }))
+      .filter(p => p.name);
+    if (!orderId.trim() || cleanProducts.length === 0 || !email.trim()) {
+      showToast('Isi No. Pesanan, minimal 1 produk, dan email');
+      return;
+    }
+    const missingLink = cleanProducts.some(p => !p.link);
+    setChat1Output(buildChatMessage1(email.trim()));
+    setEmailOutput(missingLink ? '' : buildEmail(orderId.trim(), cleanProducts, email.trim()));
+    setEmailHtml(missingLink ? '' : buildEmailHTML(orderId.trim(), cleanProducts, email.trim()));
+    if (missingLink) showToast('Link folder ada yang kosong \u2014 email dilewati');
+    const finalId = orderId.trim();
+    const record = { orderId: finalId, email: email.trim(), products: cleanProducts, ts: Date.now() };
+    try {
+      if (editingId && editingId !== finalId) {
+        localStorage.removeItem('order:' + editingId);
+      }
+      localStorage.setItem('order:' + finalId, JSON.stringify(record));
+      setEditingId(finalId);
+      loadHistory();
+    } catch (e) {}
+  }
+
+  function fallbackCopy(text) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function copyText(text) {
+    if (!text) return;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Tersalin ke clipboard');
+      }).catch(() => {
+        if (fallbackCopy(text)) showToast('Tersalin ke clipboard');
+        else showToast('Gagal menyalin, coba manual');
+      });
+    } else {
+      if (fallbackCopy(text)) showToast('Tersalin ke clipboard');
+      else showToast('Gagal menyalin, coba manual');
+    }
+  }
+
+  function copyEmailRich(html, text) {
+    if (!html) return;
+    try {
+      if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+        const item = new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([text], { type: 'text/plain' })
+        });
+        navigator.clipboard.write([item]).then(() => {
+          showToast('Email tersalin, siap tempel ke Gmail');
+        }).catch(() => {
+          copyText(text);
+        });
+        return;
+      }
+    } catch (e) {}
+    copyText(text);
+  }
+
+  function getItemProducts(item) {
+    if (Array.isArray(item.products)) {
+      return item.products.map(p => typeof p === 'string' ? { name: p, link: '' } : p);
+    }
+    if (item.product) return [{ name: item.product, link: '' }];
+    return [];
+  }
+
+  function loadFromHistory(item) {
+    const p = getItemProducts(item);
+    setOrderId(item.orderId);
+    setEditingId(item.orderId);
+    setProducts(p.length ? p : [{ name: '', link: '' }]);
+    setEmail(item.email);
+    setChat1Output(buildChatMessage1(item.email));
+    const hasAllLinks = p.length > 0 && p.every(x => x.link);
+    setEmailOutput(hasAllLinks ? buildEmail(item.orderId, p, item.email) : '');
+    setEmailHtml(hasAllLinks ? buildEmailHTML(item.orderId, p, item.email) : '');
+  }
+
+  function deleteHistoryItem(orderIdKey) {
+    try {
+      localStorage.removeItem('order:' + orderIdKey);
+      if (editingId === orderIdKey) resetForm();
+      loadHistory();
+    } catch (e) {}
+  }
+
+  const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+  function formatDateID(ts) {
+    const d = new Date(ts || Date.now());
+    return `${d.getDate()} ${BULAN_ID[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function dateKey(ts) {
+    const d = new Date(ts || Date.now());
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  }
+
+  function groupHistoryByDate(items) {
+    const groups = {};
+    for (const item of items) {
+      const key = dateKey(item.ts);
+      if (!groups[key]) groups[key] = { key, label: formatDateID(item.ts), ts: item.ts, items: [] };
+      groups[key].items.push(item);
+    }
+    return Object.values(groups).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  }
+
+  const tabContent = {
+    chat1: { text: chat1Output, label: 'Pesan Chat Shopee', empty: '' },
+    email: { text: emailOutput, label: 'Teks Email', empty: 'Lengkapi link folder di setiap produk untuk membuat teks email.' },
+  };
+  const currentOutput = tabContent[activeTab].text;
+
+  return (
+    <div>
+      <p className="pk-eyebrow">Pengiriman Pesanan Digital</p>
+      <h1 className="pk-title">Generator Pesan &amp; Email</h1>
+
+      {editingId && (
+        <div className="pk-edit-banner">
+          <span>Mengedit pesanan {editingId}</span>
+          <button className="pk-edit-cancel" onClick={resetForm}>Batal / Formulir Baru</button>
+        </div>
+      )}
+
+      <div className="pk-field">
+        <label className="pk-label">No. Pesanan</label>
+        <div className="pk-input-row">
+          <input className="pk-input" value={orderId} onChange={e => setOrderId(e.target.value)} placeholder="Masukkan nomor pesanan dari Shopee" />
+          <button className="pk-paste-btn" onClick={() => pasteInto(setOrderId)}>Tempel</button>
+        </div>
+      </div>
+
+      <div className="pk-field">
+        <label className="pk-label">Email Pembeli (untuk share akses Drive &amp; arsip riwayat)</label>
+        <div className="pk-input-row">
+          <input className="pk-input" value={email} onChange={e => setEmail(e.target.value)} placeholder="Salin dari catatan pesanan Shopee" />
+          <button className="pk-paste-btn" onClick={() => pasteInto(setEmail)}>Tempel</button>
+        </div>
+      </div>
+
+      <div className="pk-field">
+        <label className="pk-label">Produk &amp; Link Folder {products.length > 1 ? `(${products.length} item)` : ''}</label>
+        {products.map((p, idx) => (
+          <div className="pk-product-block" key={idx}>
+            {products.length > 1 && (
+              <button className="pk-remove-x" onClick={() => removeProductRow(idx)} aria-label="Hapus produk ini">&times;</button>
+            )}
+            <div className="pk-input-row" style={{ marginBottom: '6px' }}>
+              <textarea
+                className="pk-textarea"
+                value={p.name}
+                onChange={e => updateProduct(idx, 'name', e.target.value)}
+                placeholder="Tulis nama produk yang dibeli"
+                style={{ minHeight: '40px' }}
+              />
+              <button className="pk-paste-btn" onClick={() => pasteIntoProduct(idx, 'name')}>Tempel</button>
+            </div>
+            <div className="pk-input-row">
+              <input
+                className="pk-input pk-product-link"
+                value={p.link}
+                onChange={e => updateProduct(idx, 'link', e.target.value)}
+                placeholder="Tempel link folder Google Drive di sini"
+              />
+              <button className="pk-paste-btn" onClick={() => pasteIntoProduct(idx, 'link')}>Tempel</button>
+            </div>
+          </div>
+        ))}
+        <button className="pk-add-btn" onClick={addProductRow}>+ Tambah Produk</button>
+      </div>
+
+      <button className="pk-btn" onClick={handleGenerate}>{editingId ? 'Simpan Perubahan' : 'Buat Pesan & Email'}</button>
+
+      {(chat1Output || emailOutput) && (
+        <div className="pk-output-wrap">
+          <div className="pk-tabs">
+            <button className={"pk-tab" + (activeTab === 'email' ? ' active' : '')} onClick={() => setActiveTab('email')}>Email</button>
+            <button className={"pk-tab" + (activeTab === 'chat1' ? ' active' : '')} onClick={() => setActiveTab('chat1')}>Chat Shopee</button>
+          </div>
+          {activeTab === 'email' && emailOutput && (
+            <p className="pk-subject-hint">Subjek disarankan: <b>Akses Folder Pesanan #{orderId.trim()}</b></p>
+          )}
+          {activeTab === 'email' ? (
+            emailHtml ? (
+              <div className="pk-email-preview" dangerouslySetInnerHTML={{ __html: emailHtml }} />
+            ) : (
+              <div className="pk-output">{tabContent.email.empty}</div>
+            )
+          ) : (
+            <div className="pk-output">{currentOutput || tabContent[activeTab].empty}</div>
+          )}
+          <div className="pk-copy-row">
+            {activeTab === 'email' ? (
+              <>
+                <button className="pk-btn" onClick={() => copyEmailRich(emailHtml, emailOutput)}>Salin Email (siap tempel)</button>
+                <button className="pk-hi-btn" onClick={() => copyText(emailOutput)}>Salin sbg teks polos</button>
+              </>
+            ) : (
+              <button className="pk-btn" onClick={() => copyText(currentOutput)}>Salin {tabContent[activeTab].label}</button>
+            )}
+          </div>
+          {activeTab === 'email' && emailHtml && (
+            <div className="pk-gmail-row">
+              {gmailToken ? (
+                <>
+                  <button className="pk-btn pk-gmail-send-btn" onClick={sendGmailNow} disabled={gmailSending}>
+                    {gmailSending ? 'Memproses...' : 'Kirim Langsung ke Pembeli'}
+                  </button>
+                  <button className="pk-hi-btn pk-gmail-draft-btn" onClick={sendToGmailDraft} disabled={gmailSending}>
+                    {gmailSending ? '...' : 'Simpan sbg Draft saja'}
+                  </button>
+                </>
+              ) : (
+                <button className="pk-btn pk-gmail-btn" onClick={loginGmail}>Login Gmail untuk kirim otomatis</button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+
+      <div className="pk-toast">{toast}</div>
+
+      <div className="pk-history">
+        <p className="pk-history-title">Riwayat Terakhir <span style={{ fontWeight: 400, textTransform: 'none' }}>(otomatis terhapus setelah 3 hari)</span></p>
+        {history.length === 0 && <p className="pk-empty">Belum ada pesan yang dibuat.</p>}
+        {groupHistoryByDate(history).map(group => (
+          <div className="pk-history-group" key={group.key}>
+            <div className="pk-history-head">
+              <p className="pk-history-date">{group.label}</p>
+              <button className="pk-hi-btn pk-copy-all-btn" onClick={() => copyText(group.items.map(h => h.orderId).join('\n'))}>Salin No. ({group.items.length})</button>
+            </div>
+            {group.items.map(item => {
+              const p = getItemProducts(item);
+              const subLabel = p.length > 1 ? `${p.length} produk: ${p[0].name}, ...` : (p[0] ? p[0].name : '');
+              return (
+                <div className="pk-history-item" key={item.orderId}>
+                  <div className="pk-hi-main">
+                    <div className="pk-hi-order">{item.orderId}{item.email ? ` \u00b7 ${item.email}` : ''}</div>
+                    <div className="pk-hi-sub">{subLabel}</div>
+                  </div>
+                  <div className="pk-hi-actions">
+                    <button className="pk-hi-btn" onClick={() => copyText(item.orderId)}>Salin No.</button>
+                    <button className="pk-hi-btn" onClick={() => loadFromHistory(item)}>Edit</button>
+                    <button className="pk-hi-btn" onClick={() => deleteHistoryItem(item.orderId)}>Hapus</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app-root')).render(<App />);
+</script>
+</body>
+</html>
