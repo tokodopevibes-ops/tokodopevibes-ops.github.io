@@ -141,6 +141,11 @@
     margin-top: 8px;
   }
   .pk-sheet-btn:disabled { opacity: 0.6; }
+  .pk-relogin-hint {
+    font-size: 11px;
+    color: #9aa08e;
+    margin: 6px 0 0;
+  }
   .pk-sheet-settings { margin-top: 12px; }
   .pk-sheet-status {
     font-size: 11.5px;
@@ -490,6 +495,16 @@ function App() {
     }
   }
 
+  function reloginGmail() {
+    setGmailToken(null);
+    try { localStorage.removeItem(GMAIL_TOKEN_KEY); } catch (e) {}
+    if (tokenClientRef.current) {
+      tokenClientRef.current.requestAccessToken({ prompt: 'consent' });
+    } else {
+      showToast('Google belum siap, coba lagi sebentar');
+    }
+  }
+
   function base64UrlEncode(str) {
     const bytes = new TextEncoder().encode(str);
     let binary = '';
@@ -598,7 +613,15 @@ function App() {
       const mime = buildMimeMessage(email.trim(), subject, emailOutput, emailHtml);
       const raw = base64UrlEncode(mime);
       await gmailApiRequest('drafts', { method: 'POST', body: JSON.stringify({ message: { raw } }) });
-      showToast('Draft berhasil dibuat di Gmail!');
+      let sheetNote = '';
+      if (sheetId) {
+        try {
+          const cleanProducts = products.filter(p => p.name.trim()).map(p => ({ name: p.name.trim(), link: p.link.trim() }));
+          await logOrderToSheet(orderId.trim(), cleanProducts, email.trim());
+          sheetNote = ' & tercatat di Spreadsheet';
+        } catch (se) {}
+      }
+      showToast('Draft berhasil dibuat di Gmail' + sheetNote + '!');
     } catch (e) {
       if (e.message === 'SESSION_EXPIRED') showToast('Sesi Gmail habis, silakan login lagi');
       else showToast('Gagal buat draft: ' + e.message);
@@ -619,7 +642,15 @@ function App() {
       const raw = base64UrlEncode(mime);
       const draft = await gmailApiRequest('drafts', { method: 'POST', body: JSON.stringify({ message: { raw } }) });
       await gmailApiRequest('drafts/send', { method: 'POST', body: JSON.stringify({ id: draft.id }) });
-      showToast('Email berhasil terkirim ke pembeli!');
+      let sheetNote = '';
+      if (sheetId) {
+        try {
+          const cleanProducts = products.filter(p => p.name.trim()).map(p => ({ name: p.name.trim(), link: p.link.trim() }));
+          await logOrderToSheet(orderId.trim(), cleanProducts, email.trim());
+          sheetNote = ' & tercatat di Spreadsheet';
+        } catch (se) {}
+      }
+      showToast('Email berhasil terkirim ke pembeli' + sheetNote + '!');
     } catch (e) {
       if (e.message === 'SESSION_EXPIRED') showToast('Sesi Gmail habis, silakan login lagi');
       else showToast('Gagal kirim email: ' + e.message);
@@ -967,9 +998,12 @@ This is an automated email confirming the delivery of your digital order.`;
               )}
             </div>
           )}
+          {activeTab === 'email' && emailHtml && gmailToken && (
+            <p className="pk-relogin-hint">Gagal karena izin akses kurang? <button className="pk-link-btn" onClick={reloginGmail}>Login ulang</button></p>
+          )}
           {activeTab === 'email' && emailHtml && sheetId && (
             <button className="pk-btn pk-sheet-btn" onClick={catatKeSheet} disabled={sheetSyncing}>
-              {sheetSyncing ? 'Mencatat...' : 'Catat ke Spreadsheet'}
+              {sheetSyncing ? 'Mencatat...' : 'Catat ke Spreadsheet Saja (tanpa kirim email)'}
             </button>
           )}
           <div className="pk-sheet-settings">
