@@ -376,8 +376,13 @@ function App() {
   const [emailHtml, setEmailHtml] = useState('');
   const [gmailToken, setGmailToken] = useState(null);
   const [gmailSending, setGmailSending] = useState(false);
+  const DEFAULT_SHEET_ID = '1-DKmuh-f_pU9fiYNKlBcKvZoe6bCJJyveIDeJhOkxZg';
   const [sheetId, setSheetId] = useState(() => {
-    try { return localStorage.getItem('sheet_id') || ''; } catch (e) { return ''; }
+    try {
+      const saved = localStorage.getItem('sheet_id');
+      if (saved !== null) return saved;
+      return DEFAULT_SHEET_ID;
+    } catch (e) { return DEFAULT_SHEET_ID; }
   });
   const [sheetIdInput, setSheetIdInput] = useState('');
   const [sheetSyncing, setSheetSyncing] = useState(false);
