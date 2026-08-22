@@ -990,14 +990,9 @@ This is an automated email confirming the delivery of your digital order.`;
           {activeTab === 'email' && emailHtml && (
             <div className="pk-gmail-row">
               {gmailToken ? (
-                <>
-                  <button className="pk-btn pk-gmail-send-btn" onClick={sendGmailNow} disabled={gmailSending}>
-                    {gmailSending ? 'Memproses...' : 'Kirim Langsung ke Pembeli'}
-                  </button>
-                  <button className="pk-hi-btn pk-gmail-draft-btn" onClick={sendToGmailDraft} disabled={gmailSending}>
-                    {gmailSending ? '...' : 'Simpan sbg Draft saja'}
-                  </button>
-                </>
+                <button className="pk-btn pk-gmail-send-btn" onClick={sendGmailNow} disabled={gmailSending}>
+                  {gmailSending ? 'Memproses...' : 'Kirim ke Pembeli & Catat'}
+                </button>
               ) : (
                 <button className="pk-btn pk-gmail-btn" onClick={loginGmail}>Login Gmail untuk kirim otomatis</button>
               )}
@@ -1005,11 +1000,6 @@ This is an automated email confirming the delivery of your digital order.`;
           )}
           {activeTab === 'email' && emailHtml && gmailToken && (
             <p className="pk-relogin-hint">Gagal karena izin akses kurang? <button className="pk-link-btn" onClick={reloginGmail}>Login ulang</button></p>
-          )}
-          {activeTab === 'email' && emailHtml && sheetId && (
-            <button className="pk-btn pk-sheet-btn" onClick={catatKeSheet} disabled={sheetSyncing}>
-              {sheetSyncing ? 'Mencatat...' : 'Catat ke Spreadsheet Saja (tanpa kirim email)'}
-            </button>
           )}
           <div className="pk-sheet-settings">
             {sheetId ? (
