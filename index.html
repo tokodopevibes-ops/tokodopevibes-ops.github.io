@@ -354,6 +354,32 @@
     margin: 0 0 6px;
   }
   .pk-subject-hint b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+  .pk-google-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    margin-top: 14px;
+    border: 1px solid var(--line);
+  }
+  .pk-google-status.ok { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .pk-google-status.off { background: #fbeceb; border-color: #c0625e; color: #a3413d; }
+  .pk-google-status-text { font-weight: 600; }
+  .pk-google-status-btn {
+    flex-shrink: 0;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
 </style>
 <script type="text/babel">
 const { useState, useEffect, useRef } = React;
@@ -362,11 +388,13 @@ function App() {
   const STORE_NAME = 'Dope Vibes';
   const LOGO_URL = 'https://tokodopevibes-ops.github.io/logo.png';
   const DRIVE_ICON_URL = 'https://tokodopevibes-ops.github.io/drive-icon.png';
+  const BUKA_FOLDER_ICON_URL = 'https://tokodopevibes-ops.github.io/icon-buka-folder.png';
   const HISTORY_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
   const GMAIL_CLIENT_ID = '753578580309-9evb51u7eik50le85shf06lbdd0p3nia.apps.googleusercontent.com';
   const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.compose';
   const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
   const OAUTH_SCOPES = `${GMAIL_SCOPE} ${SHEETS_SCOPE}`;
+  const GOOGLE_ACCOUNT_LABEL = 'tokodopevibes@gmail.com';
 
   const [orderId, setOrderId] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -736,7 +764,7 @@ This is an automated email confirming the delivery of your digital order.`;
     const itemsHtml = productList.map((p, i) => `
       <div style="background:#faf8f2;border:1px solid #ece4cf;border-radius:10px;padding:18px 20px;margin:0 0 14px;">
         <p style="margin:0 0 14px;font-size:14px;font-weight:700;color:#1c1f18;font-family:Arial,Helvetica,sans-serif;">${i + 1}. ${escapeHtml(p.name)}</p>
-        <a href="${escapeHtml(p.link)}" style="display:inline-block;background-color:#1a9e4c;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:13px;font-weight:700;letter-spacing:0.02em;font-family:Arial,Helvetica,sans-serif;"><img src="${DRIVE_ICON_URL}" width="18" height="18" alt="" style="vertical-align:middle;margin-right:10px;margin-top:-1px;margin-bottom:-1px;border:0;" />Buka Folder</a>
+        <a href="${escapeHtml(p.link)}" style="display:inline-block;text-decoration:none;"><img src="${BUKA_FOLDER_ICON_URL}" width="260" alt="Buka Folder" style="display:block;width:260px;max-width:100%;height:auto;border:0;" /></a>
       </div>`).join('');
 
     return `<div style="max-width:560px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;">
@@ -907,6 +935,17 @@ This is an automated email confirming the delivery of your digital order.`;
       <p className="pk-eyebrow">Pengiriman Pesanan Digital</p>
       <h1 className="pk-title">Generator Pesan &amp; Email</h1>
 
+      <div className={"pk-google-status " + (gmailToken ? 'ok' : 'off')}>
+        <span className="pk-google-status-text">
+          {gmailToken
+            ? `\u2705 Google tersambung (${GOOGLE_ACCOUNT_LABEL}) \u2014 Gmail & Spreadsheet aktif`
+            : '\u26a0\ufe0f Belum login Google \u2014 diperlukan untuk kirim otomatis & catat ke Spreadsheet'}
+        </span>
+        <button className="pk-google-status-btn" onClick={gmailToken ? reloginGmail : loginGmail}>
+          {gmailToken ? 'Login Ulang' : 'Login Sekarang'}
+        </button>
+      </div>
+
       {editingId && (
         <div className="pk-edit-banner">
           <span>Mengedit pesanan {editingId}</span>
@@ -1001,9 +1040,6 @@ This is an automated email confirming the delivery of your digital order.`;
                 <button className="pk-btn pk-gmail-btn" onClick={loginGmail}>Login Gmail untuk kirim otomatis</button>
               )}
             </div>
-          )}
-          {activeTab === 'email' && emailHtml && gmailToken && (
-            <p className="pk-relogin-hint">Gagal karena izin akses kurang? <button className="pk-link-btn" onClick={reloginGmail}>Login ulang</button></p>
           )}
           <div className="pk-sheet-settings">
             {sheetId ? (
